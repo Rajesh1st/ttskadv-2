@@ -92,27 +92,17 @@ def set_chat_override(cfg, chat_id, key, value):
 
 # ================= DB =================
 def load_seen():
-    try:
-        with open(DB_FILE, "r") as f:
-            return set(json.load(f))
-    except:
-        return set()
+    return storage.load_seen(DB_FILE)
 
 def save_seen(seen):
-    with open(DB_FILE, "w") as f:
-        json.dump(list(seen), f)
+    storage.save_seen(DB_FILE, seen)
 
 # ================= STATS =================
 def load_stats():
-    try:
-        with open(STATS_FILE, "r") as f:
-            return json.load(f)
-    except:
-        return {"date": str(date.today()), "sky": 0, "hdm": 0, "ef": 0, "ff": 0}
+    return storage.load_stats(STATS_FILE, {"date": str(date.today()), "sky": 0, "hdm": 0, "ef": 0, "ff": 0})
 
 def save_stats(s):
-    with open(STATS_FILE, "w") as f:
-        json.dump(s, f)
+    storage.save_stats(STATS_FILE, s)
 
 def increment_stat(source):
     s = load_stats()
@@ -1109,22 +1099,6 @@ def run_ff_check(notify=None):
 def main():
     print("Bot Started...")
     threading.Thread(target=bot.infinity_polling, daemon=True).start()
-
-    # FIX: Pehli baar current posts seen mein daal do — purane posts channel mein mat bhejo
-    print("Initializing seen posts (first run seed)...")
-    try:
-        seen = load_seen()
-        # Agar seen empty hai toh sab current posts ko seen mein daal do
-        if not seen:
-            print("seen_posts.json empty hai — current posts seed kar rahe hain...")
-            for post in get_sky_posts(): seen.add(post["url"])
-            for post in get_hdm_posts(): seen.add(post["url"])
-            for post in get_ef_posts(): seen.add(post["url"])
-            for post in get_ff_posts(): seen.add(post["url"])
-            save_seen(seen)
-            print(f"Seeded {len(seen)} posts. Ab sirf nayi posts jayengi.")
-    except Exception as e:
-        print(f"Seed error: {e}")
 
     while True:
         cfg = load_config()
